@@ -23,13 +23,13 @@ sidebar <- dashboardSidebar(
             "ILS",
             icon = icon("award"), startExpanded = FALSE,
             menuSubItem("Chung", tabName = "Page1"),
-            menuSubItem("Theo sinh viên/lớp", tabName = "Page2")
+            menuSubItem("Theo sinh viên", tabName = "Page2")
         ),
         menuItem(
             "Lifelong",
             icon = icon("university"), startExpanded = FALSE,
             menuSubItem("Chung", tabName = "Page3"),
-            menuSubItem("Theo sinh viên/lớp", tabName = "Page4")
+            menuSubItem("Theo sinh viên", tabName = "Page4")
         )
     )
 )
@@ -51,11 +51,11 @@ body <- dashboardBody(
                     tags$br(),
                     p(HTML("<center> <b> <p style='font-size:15px;'> CÔNG CỤ ĐÁNH GIÁ </sup> </p> </b> </center>")),
                     p(HTML("<center> <b> <p style='font-size:12px;'> Chỉ số phong cách học tập (ILS) và\nThực hành học tập suốt đời </sup> </p> </b> </center>")),
-                    p(HTML("<center> <b> <p style='font-size:12px;'> </b> <i>  Tác giả: Cô Hạnh ^^ </i> </p>  </center>")),
-                    #tags$br(),
+                    # p(HTML("<center> <b> <p style='font-size:12px;'> </b> <i>  Tác giả: Cô Hạnh ^^ </i> </p>  </center>")),
+                    tags$br(),
                     p(HTML('<center><img src="Selfdevelopment.jpg" style="width:600px;"></center>')),
                     tags$br(),
-                    p(HTML("<i> <p style='font-size:10px;text-align:left'> (Ghi chú: Trang web chưa làm xong :P :P :P) </p> </i>"))
+                    p(HTML("<i> <p style='font-size:10px;text-align:left'> (Ghi chú: Trang web chưa đang hoàn thiện) </p> </i>"))
                 )
             ),
         ),
@@ -78,9 +78,14 @@ body <- dashboardBody(
                 plotlyOutput(outputId = "genderPlot")
             ),
             box(
-                width = 12, 
+                width = 6, 
                 p(HTML("<center><b>Điểm số ILS trung bình theo giới tính</b></center>")),
                 plotlyOutput(outputId = "boxplot1")
+            ),
+            box(
+                width = 6, 
+                p(HTML("<center><b>Điểm số ILS trung bình theo lớp</b></center>")),
+                plotlyOutput(outputId = "boxplot2")
             )
         ),
         
@@ -93,8 +98,10 @@ body <- dashboardBody(
             ),
             box(
                 width = 6,
-                uiOutput(outputId = "selectClass"),
-                plotlyOutput(outputId = "radar_class")
+                p(HTML("<center><b>Điểm số 4 khía cạnh học tập</b></center>")),
+                tags$br(),
+                tags$br(),
+                plotOutput(outputId = "compare_plot")
             ),
             box(
                 width = 12, height = 4,
@@ -120,6 +127,11 @@ body <- dashboardBody(
                 width = 6, 
                 p(HTML("<center><b>Điểm số học tập suốt đời trung bình theo giới tính</b></center>")),
                 plotlyOutput(outputId = "boxplot1_ll")
+            ),
+            box(
+                width = 6, 
+                p(HTML("<center><b>Điểm số học tập suốt đời trung bình theo lớp</b></center>")),
+                plotlyOutput(outputId = "boxplot2_ll")
             )
         ),
         
@@ -148,11 +160,9 @@ body <- dashboardBody(
 
 
 
-
-
-dashboardPage(title = "ILS",
+dashboardPage(title = "Lifelong learning",
               dashboardHeader(
-                  title = span(HTML("ILS")),
+                  title = span(HTML("Lifelong learning")),
                   tags$li(
                       a(icon("question-circle"),
                         strong("Help"),
@@ -161,7 +171,7 @@ dashboardPage(title = "ILS",
                   ),
                   tags$li(
                       a(strong("Source code"),
-                        href = ""),
+                        href = "https://github.com/khuongquynhlong/hmu_ils"),
                       class = "dropdown"
                   )
               ),

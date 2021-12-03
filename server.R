@@ -8,6 +8,7 @@ library(readxl)
 library(gsheet)
 library(googlesheets)
 library(stringi)
+# library(Cairo)
 
 # Define server logic required to draw a histogram
 shinyServer(function(input, output) {
@@ -18,11 +19,13 @@ shinyServer(function(input, output) {
     RV2 <- reactiveValues()
     
     observeEvent(input$reload, {
-        RV$df <- gsheet2tbl("https://docs.google.com/spreadsheets/d/11lQ3UCs95k8l57YO2N11drRsryVTnYBL2giIc3J8txU/edit?usp=sharing")
+        RV$df <- gsheet2tbl("https://docs.google.com/spreadsheets/d/1PLMjUkNdCIjWjD2T-HRzKVNYpPdFQDyM9U_0R8jglwo/edit?usp=sharing") %>% select(-c(3,4))
         
-        names(RV$df) <- c("Timestamp", "Name", "DOB", "Gender", "ID", "Class", "Track", 
-                       "Email", paste0("item", c(1:44)))
+        names(RV$df) <- c("Timestamp", "Name", "DOB", "Gender", "Class", "Year", 
+                          "Email", paste0("item", c(1:44)), "ID")
         
+        RV$df %<>% select("Timestamp", "Name", "DOB", "Gender", "ID", "Class", "Year", 
+                          "Email", names(RV$df ))
         # glimpse(df)
         
         substr1 <- function(x){substr(x, 1, 1)}
@@ -33,16 +36,16 @@ shinyServer(function(input, output) {
         RV$df %<>% mutate(
             # Gender = stri_trans_general(Gender,"Latin-ASCII"),
             # Gender = toupper(Gender),
-            Class = stri_trans_general(Class,"Latin-ASCII"),
-            Class = toupper(Class),
+            # Class = stri_trans_general(Class,"Latin-ASCII"),
+            # Class = toupper(Class),
             ChuDong = 0,
             ThuDong = 0,
-            GiacQuan = 0,
+            CamGiac = 0,
             TrucGiac = 0,
             HinhAnh = 0,
             NgonTu = 0,
-            TuanTu = 0,
-            ThongThe = 0)
+            TrinhTu = 0,
+            TongQuat = 0)
         
         for (i in 1:nrow(RV$df)) {
             for (j1 in c(9, 13, 17, 21,25, 29, 33, 37, 41, 45, 49)) {
@@ -75,15 +78,23 @@ shinyServer(function(input, output) {
             }
         }
         
+        
+        RV$df %<>% mutate(
+            XuLyThongTin = ChuDong - ThuDong,
+            TiepThu = HinhAnh - NgonTu,
+            NhanThuc = CamGiac - TrucGiac,
+            GhiNho =TrinhTu - TongQuat)
+        
+        
         RV2$df_ll <-  gsheet2tbl("https://docs.google.com/spreadsheets/d/1qlTxR4I_6ERkcPwVAeQ3mqPz3kEXYjHbypq6oeQCdFI/edit?usp=sharing") %>%
             select(1:22)
         
-        names(RV2$df_ll) <- c("Timestamp", "Name", "DOB", "Gender", "ID", "Class", "Track", 
+        names(RV2$df_ll) <- c("Timestamp", "Name", "DOB", "Gender", "ID", "Class", "Year", 
                           "Email", paste0("item", c(1:14)))
         
         RV2$df_ll %<>% mutate(
-            Class = stri_trans_general(Class,"Latin-ASCII"),
-            Class = toupper(Class),
+            # Class = stri_trans_general(Class,"Latin-ASCII"),
+            # Class = toupper(Class),
             DongLuc = round(((item9 + item8 + item11 + item7 + item2 + item3)-6)*100/18),
             KyNang = round(((item6 + item5 + item10 + item14)-4)*100/12),
             ChuTam = round(((item13 + item12 + item4 + item1)-4)*100/12))
@@ -94,9 +105,9 @@ shinyServer(function(input, output) {
     
     diemtb <- reactive({
         c(mean(RV$df$ChuDong, na.rm = T), mean(RV$df$ThuDong, na.rm = T),
-          mean(RV$df$GiacQuan, na.rm = T), mean(RV$df$TrucGiac, na.rm = T),
+          mean(RV$df$CamGiac, na.rm = T), mean(RV$df$TrucGiac, na.rm = T),
           mean(RV$df$HinhAnh, na.rm = T), mean(RV$df$NgonTu, na.rm = T),
-          mean(RV$df$TuanTu, na.rm = T), mean(RV$df$ThongThe, na.rm = T))
+          mean(RV$df$TrinhTu, na.rm = T), mean(RV$df$TongQuat, na.rm = T))
     })
     
     
@@ -110,12 +121,12 @@ shinyServer(function(input, output) {
         RV$df %>% group_by(Gender) %>%
             summarise(ChuDong = mean(ChuDong, na.rm = T),
                       ThuDong = mean(ThuDong, na.rm = T),
-                      GiacQuan = mean(GiacQuan, na.rm = T),
+                      CamGiac = mean(CamGiac, na.rm = T),
                       TrucGiac = mean(TrucGiac, na.rm = T),
                       HinhAnh = mean(HinhAnh, na.rm = T),
                       NgonTu = mean(NgonTu, na.rm = T),
-                      TuanTu = mean(TuanTu, na.rm = T),
-                      ThongThe = mean(ThongThe, na.rm = T))
+                      TrinhTu = mean(TrinhTu, na.rm = T),
+                      TongQuat = mean(TongQuat, na.rm = T))
     })
     
     
@@ -131,12 +142,12 @@ shinyServer(function(input, output) {
         RV$df %>% group_by(Class) %>%
             summarise(ChuDong = mean(ChuDong, na.rm = T),
                       ThuDong = mean(ThuDong, na.rm = T),
-                      GiacQuan = mean(GiacQuan, na.rm = T),
+                      CamGiac = mean(CamGiac, na.rm = T),
                       TrucGiac = mean(TrucGiac, na.rm = T),
                       HinhAnh = mean(HinhAnh, na.rm = T),
                       NgonTu = mean(NgonTu, na.rm = T),
-                      TuanTu = mean(TuanTu, na.rm = T),
-                      ThongThe = mean(ThongThe, na.rm = T))
+                      TrinhTu = mean(TrinhTu, na.rm = T),
+                      TongQuat = mean(TongQuat, na.rm = T))
     })  
     
     diemtb_class_ll <- reactive({
@@ -150,24 +161,40 @@ shinyServer(function(input, output) {
         diemtb_gender_long <- RV$df %>% select(Gender, 53:60) %>% 
             gather(-1, key = "Domain", value = "Diem") %>%
             mutate(Domain = factor(Domain, 
-                                   levels = c("ChuDong", "ThuDong", "GiacQuan", "TrucGiac",
-                                                      "HinhAnh", "NgonTu", "TuanTu", "TongThe")))
+                                   levels = c("ChuDong", "ThuDong", "CamGiac", "TrucGiac",
+                                                      "HinhAnh", "NgonTu", "TrinhTu", "TongThe")))
     }) 
+    
+    
+    diemtb_class_long <- reactive({
+        diemtb_class_long <- RV$df %>% select(Class, 53:60) %>% 
+            gather(-1, key = "Domain", value = "Diem") %>%
+            mutate(Domain = factor(Domain, 
+                                   levels = c("ChuDong", "ThuDong", "CamGiac", "TrucGiac",
+                                              "HinhAnh", "NgonTu", "TrinhTu", "TongThe")))
+    }) 
+    
+    
     
     diemtb_gender_long_ll <- reactive({
         diemtb_gender_long_ll <- RV2$df_ll %>% select(Gender, 23:25) %>% 
             gather(-1, key = "Domain", value = "Diem")
     }) 
     
+
+    diemtb_class_long_ll <- reactive({
+        diemtb_class_long_ll <- RV2$df_ll %>% select(Class, 23:25) %>% 
+            gather(-1, key = "Domain", value = "Diem")
+    }) 
     
     
     df2 <- reactive({
-        RV$df %>% select("Name", "Gender", "ID", "Class", "Track", 53:60)
+        RV$df %>% select("Name", "Gender", "ID", "Class", "Year", 53:64)
     })  
     
     
     df_ll2 <- reactive({
-        RV2$df_ll %>% select("Name", "Gender", "ID", "Class", "Track", 23:25)
+        RV2$df_ll %>% select("Name", "Gender", "ID", "Class", "Year", 23:25)
     })  
     
     
@@ -191,11 +218,11 @@ shinyServer(function(input, output) {
                     choices = df2()$ID)
     )
     
-    output$selectClass <- renderUI(
-        selectInput(inputId = "selectClass",
-                    label = "Chọn lớp",
-                    choices = diemtb_class()$Class)
-    )  
+    # output$selectClass <- renderUI(
+    #     selectInput(inputId = "selectClass",
+    #                 label = "Chọn lớp",
+    #                 choices = diemtb_class()$Class)
+    # )  
     
     
     output$selectID_ll <- renderUI(
@@ -215,8 +242,8 @@ shinyServer(function(input, output) {
         plot_ly(
             type = 'scatterpolar',
             r = diemtb(),
-            theta =  c("Chủ Động", "Thụ Động", "Giác Quan", "Trực Giác",
-                       "Hình Ảnh", "Ngôn Từ", "Tuần Tự", "Tổng Thể"),
+            theta =  c("Chủ Động", "Thụ Động", "Cảm Giác", "Trực Giác",
+                       "Hình Ảnh", "Ngôn Từ", "Trình Tự", "Tổng Quát"),
             fill = 'toself',
             name = "Chung",
         ) %>% 
@@ -259,6 +286,14 @@ shinyServer(function(input, output) {
                    yaxis = list(title='Điểm số ILS'))
     })
     
+    output$boxplot2 <- renderPlotly({
+        plot_ly(diemtb_class_long(),
+                x = ~Domain, y = ~Diem, color = ~Class, type = "box") %>%
+            layout(boxmode = "group",
+                   xaxis = list(title=''),
+                   yaxis = list(title='Điểm số ILS'))
+    })
+    
     
     output$boxplot1_ll <- renderPlotly({
         plot_ly(diemtb_gender_long_ll(),
@@ -270,6 +305,14 @@ shinyServer(function(input, output) {
     })
     
     
+    output$boxplot2_ll <- renderPlotly({
+        plot_ly(diemtb_class_long_ll(),
+                x = ~Domain, y = ~Diem, color = ~Class, type = "box") %>%
+            layout(boxmode = "group",
+                   xaxis = list(title=''),
+                   yaxis = list(title='Điểm số học tập suốt đời'))
+    })
+    
     output$genderPlot <- renderPlotly({
         plot_ly(
             type = 'scatterpolar',
@@ -277,14 +320,14 @@ shinyServer(function(input, output) {
         ) %>%
             add_trace(
                 r = diemtb_gender()[1, 2:9] %>% as.numeric(),
-                theta = c("Chủ Động", "Thụ Động", "Giác Quan", "Trực Giác",
-                          "Hình Ảnh", "Ngôn Từ", "Tuần Tự", "Tổng Thể"),
+                theta = c("Chủ Động", "Thụ Động", "Cảm Giác", "Trực Giác",
+                          "Hình Ảnh", "Ngôn Từ", "Trình Tự", "Tổng Quát"),
                 name = 'Nam'
             ) %>%
             add_trace(
                 r = diemtb_gender()[2, 2:9] %>% as.numeric(),
-                theta = c("Chủ Động", "Thụ Động", "Giác Quan", "Trực Giác",
-                          "Hình Ảnh", "Ngôn Từ", "Tuần Tự", "Tổng Thể"),
+                theta = c("Chủ Động", "Thụ Động", "Cảm Giác", "Trực Giác",
+                          "Hình Ảnh", "Ngôn Từ", "Trình Tự", "Tổng Quát"),
                 name = 'Nữ'
             ) %>%
             layout(
@@ -329,8 +372,8 @@ shinyServer(function(input, output) {
         plot_ly(
             type = 'scatterpolar',
             r = df2() %>% filter(ID == input$selectID) %>% select(6:13) %>% as.numeric(),
-            theta = c("Chủ Động", "Thụ Động", "Giác Quan", "Trực Giác",
-                      "Hình Ảnh", "Ngôn Từ", "Tuần Tự", "Tổng Thể"),
+            theta = c("Chủ Động", "Thụ Động", "Cảm Giác", "Trực Giác",
+                      "Hình Ảnh", "Ngôn Từ", "Trình Tự", "Tổng Quát"),
             fill = 'toself',
             name = df2() %>% filter(ID == input$selectID) 
             %>% select(Name) 
@@ -370,29 +413,70 @@ shinyServer(function(input, output) {
     })
     
     
-    output$radar_class <- renderPlotly({
-        plot_ly(
-            type = 'scatterpolar',
-            r = diemtb_class() %>% filter(Class == input$selectClass) %>% 
-                select(2:9) %>% 
-                as.numeric(),
-            theta = c("Chủ Động", "Thụ Động", "Giác Quan", "Trực Giác",
-                      "Hình Ảnh", "Ngôn Từ", "Tuần Tự", "Tổng Thể"),
-            fill = 'toself',
-            name = diemtb_class() %>% filter(Class == input$selectClass) 
-            %>% select(Class) 
-            %>% as.character()
-        ) %>% 
-            layout(polar = list(
-                radialaxis = list(
-                    visible = T,
-                    range = c(0,11)
-                )
-            ),
-            showlegend = F
+    # output$radar_class <- renderPlotly({
+    #     plot_ly(
+    #         type = 'scatterpolar',
+    #         r = diemtb_class() %>% filter(Class == input$selectClass) %>% 
+    #             select(2:9) %>% 
+    #             as.numeric(),
+    #         theta = c("Chủ Động", "Thụ Động", "Cảm Giác", "Trực Giác",
+    #                   "Hình Ảnh", "Ngôn Từ", "Trình Tự", "Tổng Quát"),
+    #         fill = 'toself',
+    #         name = diemtb_class() %>% filter(Class == input$selectClass) 
+    #         %>% select(Class) 
+    #         %>% as.character()
+    #     ) %>% 
+    #         layout(polar = list(
+    #             radialaxis = list(
+    #                 visible = T,
+    #                 range = c(0,11)
+    #             )
+    #         ),
+    #         showlegend = F
+    #         )
+    # })
+
+    output$compare_plot <- renderPlot({
+        df2() %>% filter(ID == input$selectID) %>% select(14:17) %>%
+            gather(key = "domain", value = "score") %>%
+            mutate(domain = case_when(domain == "XuLyThongTin" ~ "Xử lý thông tin",
+                                      domain == "TiepThu" ~ "Tiếp thu",
+                                      domain == "NhanThuc" ~ "Nhận thức",
+                                      domain == "GhiNho" ~ "Hiểu và ghi nhớ",
+                                      TRUE ~ domain)) %>%
+            ggplot(aes(x = domain, y = score)) +
+            geom_segment(aes(x = domain, xend = domain,
+                             y = -11, yend = 11), color = "grey80", alpha = 0.5,
+                         size = 20) +
+            geom_col(width = 0.5, fill = "#e7298a") +
+            annotate(geom = "text", x = "Xử lý thông tin", y = 10, label = "Chủ Động") +
+            annotate(geom = "text", x = "Xử lý thông tin", y = -10, label = "Thụ Động") +
+            annotate(geom = "text", x = "Tiếp thu", y = 10, label = "Hình ảnh") +
+            annotate(geom = "text", x = "Tiếp thu", y = -10, label = "Ngôn từ") +
+            annotate(geom = "text", x = "Nhận thức", y = 10, label = "Cảm giác") +
+            annotate(geom = "text", x = "Nhận thức", y = -10, label = "Trực giác") +
+            annotate(geom = "text", x = "Hiểu và ghi nhớ", y = 10, label = "Trình tự") +
+            annotate(geom = "text", x = "Hiểu và ghi nhớ", y = -10, label = "Tổng quát") +
+            geom_hline(yintercept = 0, size = 1) +
+            geom_hline(yintercept = 3, linetype = 2, alpha = 0.5) +
+            geom_hline(yintercept = 9, linetype = 2, alpha = 0.5) +
+            geom_hline(yintercept = -3, linetype = 2, alpha = 0.5) +
+            geom_hline(yintercept = -9, linetype = 2, alpha = 0.5) +
+            scale_y_continuous(breaks = seq(-11, 11, 2), limits = c(-11, 11)) +
+            coord_flip() +
+            labs(
+                x = NULL,
+                y = NULL,
+                title = df2() %>% filter(ID == input$selectID) %>%
+                    select(Name) %>%
+                    as.character()
+            ) +
+            theme_minimal() +
+            theme(
+                axis.text = element_text(size = 12)
             )
     })
-
+    
 
     output$radar_class_ll <- renderPlotly({
         plot_ly(
@@ -419,21 +503,6 @@ shinyServer(function(input, output) {
     output$indi_df <- renderDataTable({
         df2()
     })
-
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
     
     
     output$indi_dfll <- renderDataTable({
