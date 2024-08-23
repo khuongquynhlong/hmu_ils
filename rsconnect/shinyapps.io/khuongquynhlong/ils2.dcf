@@ -1,0 +1,12 @@
+name: ils2
+title: ils2
+username: khuongquynhlong
+account: khuongquynhlong
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 5297576
+bundleId: 9020077
+url: https://khuongquynhlong.shinyapps.io/ils2/
+version: 1
+asMultiple: FALSE
+asStatic: FALSE
